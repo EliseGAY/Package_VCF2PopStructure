@@ -1,0 +1,10 @@
+Package: VCF2PopStructure
+Type: Package
+Title: Tools for Fst computation from VCF
+Version: 0.1.0
+Authors@R: person("Elise", "Gaye", email="elise@example.com", role=c("aut","cre"))
+Description: Functions to filter genotypes and compute Hudson Fst.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.3
