@@ -72,29 +72,29 @@ Filters_na_Ind_Pos <- function(vcf, rate_na_max_POS, rate_na_max_Ind, ploidy) {
   # Set the missing genotype string based on ploidy
   missing_str <- if (ploidy == 1) "." else "./."
   
+  # Calculate missing data rate for positions (rows)
+  missing_positions <- rowSums(gt == missing_str)
+  rate_na_pos <- (missing_positions / ncol(gt)) * 100
+  positions_kept <- which(rate_na_pos <= rate_na_max_POS)
+  
+  # Filter the VCF by positions
+  vcf_filtered_na <- vcf[positions_kept, ]
+  
+  # Re-extract genotype data for the filtered individuals
+  gt_filtered <- extract.gt(vcf_filtered_na, element = "GT", mask = FALSE, as.numeric = FALSE, return.alleles = FALSE, convertNA = FALSE)
+  
   # Calculate missing data rate for individuals (columns)
-  missing_individuals <- colSums(gt == missing_str)
+  missing_individuals <- colSums(gt_filtered == missing_str)
   rate_na_ind <- (missing_individuals / nrow(gt)) * 100
   samples_kept <- names(rate_na_ind[rate_na_ind <= rate_na_max_Ind])
   
   # Filter the VCF by individuals
-  vcf_filtered_ind <- vcf[, c("FORMAT", samples_kept)]
+  vcf_filtered_ind <- vcf_filtered_na[, c("FORMAT", samples_kept)]
   
-  # Re-extract genotype data for the filtered individuals
-  gt_filtered <- extract.gt(vcf_filtered_ind, element = "GT", mask = FALSE, as.numeric = FALSE, return.alleles = FALSE, convertNA = FALSE)
-  
-  # Calculate missing data rate for positions (rows)
-  missing_positions <- rowSums(gt_filtered == missing_str)
-  rate_na_pos <- (missing_positions / ncol(gt_filtered)) * 100
-  positions_kept <- which(rate_na_pos <= rate_na_max_POS)
-  
-  # Filter the VCF by positions
-  vcf_filtered_na <- vcf_filtered_ind[positions_kept, ]
   
   # Return the filtered VCF
-  return(vcf_filtered_na)
+  return(vcf_filtered_ind)
 }
-
 
 #' Filter Individuals and Positions by Alternative Rate
 #'
