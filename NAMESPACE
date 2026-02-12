@@ -3,4 +3,5 @@
 export(Filters_Het_Ind_Pos)
 export(Filters_na_Ind_Pos)
 export(filter_vcf_by_dp)
+import(comprehenr)
 import(vcfR)
