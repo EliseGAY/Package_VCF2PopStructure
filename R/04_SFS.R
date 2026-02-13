@@ -101,7 +101,7 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   meta_sub = pop_table[pop_table[,2] %in% samples_names,]
   samples_list=split(meta_sub$GT_sample, meta_sub$Population)
   # Get the user-chosen pop pair
-  Sample_2pop <- samples_list[pop_pairs]
+  Sample_2pop <- samples_list[pop_pair]
   print("pop sizes")
   print(c(length(Sample_2pop[[1]]), length(Sample_2pop[[2]])))
   # initialization of the 2D-SFS :
@@ -142,3 +142,4 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   }
   return(SFS_2D)
 }
+
