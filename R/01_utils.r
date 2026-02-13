@@ -251,11 +251,10 @@ getPairwisePop<-function(pop_vec){
 
 getAlleleFreq = function(locus){
   ## TODO : Managment and verif of LociPairs table (Na and df)
-  Purged_loci <- locus[rowSums(is.na(locus)) == 0, , drop=FALSE]
   
-  if(all(Purged_loci[!is.na(Purged_loci)] %in% c(0, 1, 2, NA))){
+  if(all(locus[!is.na(locus)] %in% c(0, 1, 2, NA))){
     
-    tot_alt_freq = as.numeric(rowSums(Purged_loci)) / as.numeric(2*nrow(Purged_loci))
+    tot_alt_freq = as.numeric(rowSums(locus, na.rm = T)) / as.numeric(2*ncol(locus))
     tot_ref_freq = 1-tot_alt_freq
     freq_list = list(tot_alt_freq, tot_ref_freq)
     names(freq_list) = c("alt_freq", "ref_freq")
