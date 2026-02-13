@@ -230,9 +230,9 @@ getPairwisePop<-function(pop_vec){
   do.call(rbind, pairs) |> as.data.frame() # eq. to  rbind(pairs[[1]], pairs[[2]], pairs[[3]])
 }
 
-#' getAlleleFreq : get the Alt and Ref allele frequencies in one locus table
+#' getAlleleFreq : get the Alt and Ref allele frequencies in genotype table (0,1,2 encoded)
 #' 
-#' @param : locus table of one line, make sure that 'NA' are encoded in R readable. 
+#' @param : locus table, make sure that 'NA' are encoded in R readable. 
 #' 
 #' In format : Obtain by convert_GT()
 #' 
@@ -249,12 +249,13 @@ getPairwisePop<-function(pop_vec){
 #' $ref_freq
 #' [1] 0.6
 
-getAlleleFreq=function(locus){
+getAlleleFreq = function(locus){
   ## TODO : Managment and verif of LociPairs table (Na and df)
+  Purged_loci <- locus[rowSums(is.na(locus)) == 0, , drop=FALSE]
   
-  if(all(locus[!is.na(locus)] %in% c(0, 1, 2, NA))){
+  if(all(Purged_loci[!is.na(Purged_loci)] %in% c(0, 1, 2, NA))){
     
-    tot_alt_freq = as.numeric(sum(locus[!is.na(locus)])) / as.numeric(2*length(locus[!is.na(locus)]))
+    tot_alt_freq = as.numeric(rowSums(Purged_loci)) / as.numeric(2*nrow(Purged_loci))
     tot_ref_freq = 1-tot_alt_freq
     freq_list = list(tot_alt_freq, tot_ref_freq)
     names(freq_list) = c("alt_freq", "ref_freq")
@@ -263,7 +264,7 @@ getAlleleFreq=function(locus){
 }
 
 # getAlleleFreqByPop : Extract pair of pop in a metadata table
-#' @param loci_table dataframe of allele count in one locus (line) and in samples (col) from one or several pop
+#' @param loci_table dataframe of allele count in loci (rows) and in samples (col) from one or several pop
 #' @param pop_table (dataframe) : contains samples ID in col1 and Pop names in col2
 #' @returns list of allele frequencies for each pop
 #' @examples
@@ -281,43 +282,43 @@ getAlleleFreq=function(locus){
 #' 7       C      s7
 #' 8       C      s8
 #' 9       C      s9
-#' > print(getAlleleFreqByPop(loci_pairs = loci_table,  pop_table = pop_table_test))
-#' alt_freq  ref_freq
-#' A 0.6666667 0.3333333
-#' B         0         1
+#' > summary(res)
+#'         Length Class  Mode
+#'pop1 2      -none- list
+#'pop2   2      -none- list
+#'pop3 2      -none- list
+#'> summary(res$pop1)
+#'         Length Class  Mode   
+#'alt_freq 181043 -none- numeric
+#'ref_freq 181043 -none- numeric
+
 getAlleleFreqByPop=function(loci_table, pop_table){
   
   ## TODO : Managment and verif of LociPairs table (Na and df)
   stopifnot(is.data.frame(loci_table))
   
-    if(all(loci_table[!is.na(loci_table)] %in% c(0, 1, 2, NA))){
-      samples_2pops = colnames(loci_table)
-      
-      # check for match between samples names
-      missing_in_pop_table <- setdiff(samples_2pops, pop_table[,2])
-      
-      if (length(missing_in_pop_table) > 0) {
-        stop(
-          "ERROR: loci_table contains samples not present in pop_table:\n",
-          paste(missing_in_pop_table, collapse = ", ")
-        )
-      }
-      
-      pop_level = unique(pop_table[,1][pop_table[,2] %in% samples_2pops])
-  
-      # Initiate results table
-      res <- data.frame(
-        alt_freq = numeric(length(pop_level)),
-        ref_freq = numeric(length(pop_level)),
-        row.names = pop_level)
+  if(all(loci_table[!is.na(loci_table)] %in% c(0, 1, 2, NA))){
+    samples_2pops = colnames(loci_table)
     
+    # check for match between samples names
+    missing_in_pop_table <- setdiff(samples_2pops, pop_table[,2])
+    
+    if (length(missing_in_pop_table) > 0) {
+      stop(
+        "ERROR: loci_table contains samples not present in pop_table:\n",
+        paste(missing_in_pop_table, collapse = ", ")
+      )
+    }
+    
+    pop_level = unique(pop_table[,1][pop_table[,2] %in% samples_2pops])
+    
+    # Initiate results table
+    res = list()
     for (pop_i in pop_level) {
       sample_index = c(pop_table[,1] == pop_i)
       samples_pop_i = unique(pop_table[sample_index,][,2])
       loci_pop_i = loci_table[, samples_pop_i, drop = FALSE]
-      list_freq=getAlleleFreq(loci_pop_i)
-      res[pop_i, "alt_freq"] <- unlist(list_freq[1])
-      res[pop_i, "ref_freq"] <- unlist(list_freq[2])
+      res[[pop_i]] = getAlleleFreq(loci_pop_i)
     }
   }else{stop("Invalid genotype detected")}
   return(res)
