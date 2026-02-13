@@ -37,9 +37,9 @@ Get_FoldedSFS = function(loci_table_T){
     count_snp=as.numeric(sum(current_pos))
     count_ref=as.numeric(nb_samples*2 - count_snp)
     minor_count = min(count_ref,count_snp)
-    if (count_snp %in% count_class){
+    if (minor_count %in% count_class){
       list_class[minor_count] = as.numeric(list_class[minor_count]) + 1
-    }
+    }else{print(i)}
   }
   return(list_class)
 }
@@ -142,4 +142,3 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   }
   return(SFS_2D)
 }
-
