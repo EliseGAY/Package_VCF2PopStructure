@@ -55,12 +55,17 @@ Get_FoldedSFS = function(loci_table_T){
 #'  @description
 #'  Discard all position with NA or monomorphic in both pops
 #'  Get the minor allele frequencies by pop as following : 
-#'    count_snp_i=as.numeric(sum(current_pop_i))
-#'    count_ref_i=as.numeric(size_pop_i*2 - count_snp_i)
-#'    # get minor allele count
-#'    minor_count_i = min(count_ref_i,count_snp_i)
-#'    # get minor allele freq
-#'    minor_freq_i = minor_count_i / size_pop_i
+#'      # count of minor and major allele
+#'      count_snp_i=as.numeric(rowSums(current_pop_i))
+#'      count_ref_i=as.numeric(size_pop_i*2 - rowSums(current_pop_i))
+#'      # get minor allele count
+#'      minor_count_i = pmin(count_ref_i,count_snp_i)
+#'      # get minor allele freq
+#'      minor_freq_i = minor_count_i / size_pop_i
+#'      # assign class to freq
+#'      class_i_vec <- findInterval(minor_freq_i, breaks)
+#'      freq_pop[[pop]] = class_i_vec
+
 #' 
 #' @examples :
 #' 
@@ -77,26 +82,27 @@ Get_FoldedSFS = function(loci_table_T){
 #' SFS_2D = Get2DSFS(pop_table = metadata, pop_pair = c("pop1", "pop2"), loci_table_T = loci_table_convert)
 #' 
 #' [1] "pop sizes"
-#' [1]  8 11
+#' [1]  12 11
 #' 
 #' > SFS_2D
-#' c(0, 0.1) c(0.1, 0.2) c(0.2, 0.3) c(0.3, 0.4) c(0.4, 0.5) c(0.5, 0.6) c(0.6, 0.7) c(0.7, 0.8) c(0.8, 0.9) c(0.9, 1)
-#' c(0, 0.1)        4742        1567        1150         826         825         627         658         585         535       585
-#' c(0.1, 0.2)      7010         350         307         245         259         257         277         263         257       218
-#' c(0.2, 0.3)      4168         260         213         202         240         250         213         239         216       202
-#' c(0.3, 0.4)      3110         223         219         170         198         186         190         194         202       204
-#' c(0.4, 0.5)         0           0           0           0           0           0           0           0           0         0
-#' c(0.5, 0.6)      2739         228         226         203         195         198         191         192         186       182
-#' c(0.6, 0.7)      2367         205         201         157         160         186         184         191         164       166
-#' c(0.7, 0.8)      2371         215         218         162         208         199         210         153         148       187
-#' c(0.8, 0.9)      1923         225         224         167         185         176         166         165         171       163
-#' c(0.9, 1)           0           0           0           0           0           0           0           0           0         0
+  
+#'          1      2      3      4      5      6      7      8      9     10     11
+#'  1  118068   1741   1327    986    977    872    871    850    795    788    388
+#'  2   10934    197    156    141    147    165    139    122    144    111     51
+#'  3    7515    151    169    118    119    130    142    115    122    130     69
+#'  4    5203    169    153    115    127    121    130    116    124    102     44
+#'  5    3931    160    134    123    145    150    132    148    107    134     67
+#'  6    5432    319    292    245    267    250    238    256    229    214    120
+#'  7    2026    155    140    108    128    119    125    116    118    119     49
+#'  8    1808    114    139    125    123     91    123    102     97    112     56
+#'  9    1623    157    153    110    136    106    102     93     93    130     51
+#'  10   1525    129    135     96    130    118    115    103     96     94     73
+#'  11    771     66     68     72     67     55     59     46     45     46     40
 
 Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   
   # samples for the two populations
   samples_names = colnames(loci_table_T)
-  
   # create a list of samples and their pop names
   meta_sub = pop_table[pop_table[,2] %in% samples_names,]
   samples_list=split(meta_sub$GT_sample, meta_sub$Population)
@@ -104,6 +110,7 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   Sample_2pop <- samples_list[pop_pair]
   print("pop sizes")
   print(c(length(Sample_2pop[[1]]), length(Sample_2pop[[2]])))
+  
   # initialization of the 2D-SFS :
   n_class=10
   interval = to_list(for(i in seq(1:n_class)) seq(0,1,by=0.1)[c(i, i+1)])
@@ -111,34 +118,32 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   colnames(SFS_2D)=as.character(interval)
   rownames(SFS_2D)=as.character(interval)
   
-  for (i in seq_len(nrow(loci_table_T))) {
-    # subset the genotype for each locus with the 2 pops to compute 2D sfs
-    current_pos <- loci_table_T[i,c(Sample_2pop[[1]], Sample_2pop[[2]]), drop = FALSE]
-    
-    if(NA %in% current_pos || sum(current_pos, na.rm = T) == 0){next}
-    class_loci_i=list()
-    
-    # Loop over the 2 pop to store the current minor allale frequencies
+  # initalize the class storage
+  breaks <- seq(0, 1,length.out = 11)
+  freq_pop=list()
+  
+  #remove na and monomorphic site
+  Purged_loci <- loci_table_T[rowSums(is.na(loci_table_T)) == 0 &  rowSums(loci_table_T) != 0, c(Sample_2pop[[1]], Sample_2pop[[2]]), drop=FALSE]
+  
+    # Loop over the 2 pop to store the current minor allele frequencies
     for(pop in c(1,2)){
       # get only one pop 
-      current_pop_i = current_pos[,Sample_2pop[[pop]]]
+      current_pop_i = loci_table_T[,Sample_2pop[[pop]]]
       
       # samples size in pop i
-      size_pop_i=length(Sample_2pop[[pop]])
+      size_pop_i=length(colnames(current_pop_i))
       # count of minor and major allele
-      count_snp_i=as.numeric(sum(current_pop_i))
-      count_ref_i=as.numeric(size_pop_i*2 - count_snp_i)
+      count_snp_i=as.numeric(rowSums(current_pop_i))
+      count_ref_i=as.numeric(size_pop_i*2 - rowSums(current_pop_i))
       # get minor allele count
-      minor_count_i = min(count_ref_i,count_snp_i)
+      minor_count_i = pmin(count_ref_i,count_snp_i)
       # get minor allele freq
       minor_freq_i = minor_count_i / size_pop_i
       # assign class to freq
-      class_i=to_vec(for(i in 1:length(interval)) if(minor_freq_i >= as.numeric(unlist(interval[i])[1]) && minor_freq_i < as.numeric(unlist(interval[i])[2])) i)
-      class_loci_i[pop]=class_i
+      class_i_vec <- findInterval(minor_freq_i, breaks)
+      freq_pop[[pop]] = class_i_vec
     }
-    
-    SFS_2D[unlist(class_loci_i)[1], unlist(class_loci_i)[2]] = SFS_2D[unlist(class_loci_i)[1], unlist(class_loci_i)[2]] + 1
-    
+  
+    SFS_2D <- table(freq_pop[[1]], freq_pop[[2]])
+    return(SFS_2D)
   }
-  return(SFS_2D)
-}
