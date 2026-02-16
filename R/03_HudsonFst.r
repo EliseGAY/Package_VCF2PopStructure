@@ -421,9 +421,7 @@ getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_thres
     freqs <- getAlleleFreq(loci_pair_na_bi)
     maf <- pmin(freqs$alt_freq, freqs$ref_freq)
 	loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
-	
-    #Hudson global Fst
-	
+
 	# compute Pis : 
     Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, pop_table)
   	# All NA in PiWithin or Between gonna return NA FST.
