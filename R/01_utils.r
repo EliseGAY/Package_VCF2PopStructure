@@ -262,6 +262,31 @@ getAlleleFreq = function(locus){
   return(freq_list)
 }
 
+
+#' getAltCount : get the Alt and Ref allele count in genotype table (0,1,2 encoded)
+#' 
+#' @param : locus table, make sure that 'NA' are encoded in R readable. 
+#' 
+#' @return List of alt allele count in the pop.
+#' 
+#' @examples getAlleleFreq(locus)
+#' $alt_freq
+#' [1] 0.4
+#' 
+#' $ref_freq
+#' [1] 0.6
+
+getAlleleCount= function(locus){
+  
+  if(all(locus[!is.na(locus)] %in% c(0, 1, 2, NA))){
+    count_list=list()
+    tot_alt_count = as.numeric(rowSums(locus, na.rm = T)) 
+    count_list[["alt_count"]] = tot_alt_count
+	count_list[["ref_count"]] = (2*ncol(locus)) - count_list$alt_count
+  }else{stop("Invalid genotype detected")}
+  return(count_list)
+}
+
 # getAlleleFreqByPop : Extract pair of pop in a metadata table
 #' @param loci_table dataframe of allele count in loci (rows) and in samples (col) from one or several pop
 #' @param pop_table (dataframe) : contains samples ID in col1 and Pop names in col2
@@ -291,34 +316,114 @@ getAlleleFreq = function(locus){
 #'alt_freq 181043 -none- numeric
 #'ref_freq 181043 -none- numeric
 
+
 getAlleleFreqByPop=function(loci_table, pop_table){
-  
-  ## TODO : Managment and verif of LociPairs table (Na and df)
+  # sanity check
   stopifnot(is.data.frame(loci_table))
   
-  if(all(loci_table[!is.na(loci_table)] %in% c(0, 1, 2, NA))){
-    samples_2pops = colnames(loci_table)
+  # check that genotypes are valid
+  if (!all(loci_table[!is.na(loci_table)] %in% c(0, 1, 2))) {
+    stop("Invalid genotype detected in loci_table. Only 0, 1, 2, or NA allowed.")
+  }
+  ## TODO : Managment and verif of LociPairs table (Na and df)
+  samples_2pops <- colnames(loci_table)
+  
+  # check all samples exist in pop_table
+  missing_in_pop_table <- setdiff(samples_2pops, pop_table[,2])
+  if (length(missing_in_pop_table) > 0) {
+    stop(
+      "ERROR: loci_table contains samples not present in pop_table:\n",
+      paste(missing_in_pop_table, collapse = ", ")
+    )
+  }
+  
+  # get populations present in this subset, sorted for stable order
+  pop_level <- sort(unique(pop_table[,1][pop_table[,2] %in% samples_2pops]))
+  
+  # initiate result list
+  res <- list()
+   # loop over populations
+  for (pop_i in pop_level) {
+    # extract sample IDs for this population
+    samples_pop_i <- pop_table[pop_table[,1] == pop_i & pop_table[,2] %in% samples_2pops, 2]
     
-    # check for match between samples names
-    missing_in_pop_table <- setdiff(samples_2pops, pop_table[,2])
-    
-    if (length(missing_in_pop_table) > 0) {
-      stop(
-        "ERROR: loci_table contains samples not present in pop_table:\n",
-        paste(missing_in_pop_table, collapse = ", ")
-      )
+    # subset loci_table for these samples
+    loci_pop_i <- loci_table[, samples_pop_i, drop = FALSE]
+    res[[pop_i]] = getAlleleFreq(loci_pop_i)
     }
-    
-    pop_level = unique(pop_table[,1][pop_table[,2] %in% samples_2pops])
-    
-    # Initiate results table
-    res = list()
-    for (pop_i in pop_level) {
-      sample_index = c(pop_table[,1] == pop_i)
-      samples_pop_i = unique(pop_table[sample_index,][,2])
-      loci_pop_i = loci_table[, samples_pop_i, drop = FALSE]
-      res[[pop_i]] = getAlleleFreq(loci_pop_i)
-    }
-  }else{stop("Invalid genotype detected")}
   return(res)
+}
+
+
+
+# getAlleleCountByPop : Extract allele count from genotype table by pop use getAlleleCount function 
+#' @param loci_table dataframe of allele count in loci (rows) and in samples (col) from one or several pop
+#' @param pop_table (dataframe) : contains samples ID in col1 and Pop names in col2
+#' @returns list of allele count for each pop
+#' @examples
+#' > locus_table
+#' A tibble: 181,043 × 31
+#'   `1622W1_S254` `1623W1_S276` `1624W1_S392` `1625Q_S431` `1625W1_S384` `1626W1_S364` `1627W1_S385` `1629W1_S379` `1681W1_S374` `1682W1_S380` `1684W1_S376` `1686W1_S402`
+#' 1             0             0             0            0             0             0             0             0             0             0             0             0
+#' 2             0             0             0            0             0             0             0             0             0             0             0             0
+#' 3             0             0             0            0             0             0             0             0             0             0             0             0
+# ℹ 181,033 more rows
+# ℹ 19 more variables 
+
+#' > pop_table_test
+#' pop_vec samples
+#' 1       A      s1
+#' 2       A      s2
+#' 3       A      s3
+#' 4       B      s4
+#' 5       B      s5
+#' 6       B      s6
+#' 7       C      s7
+#' 8       C      s8
+#' 9       C      s9
+
+#' by_popCount = getAlleleCountByPop(loci_table = loci_table_T_CV, pop_table = metadata)
+#' by_popCount[[1]]$alt_count
+#' by_popCount$Pop1$ref_count
+
+getAlleleCountByPop=function(loci_table, pop_table){
+   # sanity check
+  stopifnot(is.data.frame(loci_table))
+  
+  # check that genotypes are valid
+  if (!all(loci_table[!is.na(loci_table)] %in% c(0, 1, 2))) {
+    stop("Invalid genotype detected in loci_table. Only 0, 1, 2, or NA allowed.")
+  }
+  samples_2pops <- colnames(loci_table)
+  
+  # check all samples exist in pop_table
+  missing_in_pop_table <- setdiff(samples_2pops, pop_table[,2])
+  if (length(missing_in_pop_table) > 0) {
+    stop(
+      "ERROR: loci_table contains samples not present in pop_table:\n",
+      paste(missing_in_pop_table, collapse = ", ")
+    )
+  }
+  
+  # get populations present in this subset, sorted for stable order
+  pop_level <- sort(unique(pop_table[,1][pop_table[,2] %in% samples_2pops]))
+  
+  # initiate result list
+  res <- list()
+  # loop over populations
+  for (pop_i in pop_level) {
+    # extract sample IDs for this population
+    samples_pop_i <- pop_table[pop_table[,1] == pop_i & pop_table[,2] %in% samples_2pops, 2]
+    print("get count:")
+	print(pop_i)
+	print(samples_pop_i)
+    # subset loci_table for these samples
+    loci_pop_i <- loci_table[, samples_pop_i, drop = FALSE]
+    
+    # compute allele counts
+    res[[pop_i]] <- getAlleleCount(loci_pop_i)
+  }
+  
+  return(res)
+
 }
