@@ -8,15 +8,18 @@
 #' Compute folded SFS as following : 
 #'   count_snp=as.numeric(sum(current_pos))
 #'   count_ref=as.numeric(nb_samples*2 - count_snp)
-#'   minor_count = min(count_ref,count_snp)
+#'   minor_count = pmin(count_ref,count_snp)
 #' 
 #' loci_table_Test=loci_table_convert[c(1:50000),]
 #' dim(loci_table_Test)
 #' SFS_folded=Get_FoldedSFS(loci_table_Test)
 #' [1] "nb_class:"
 #' [1] 31
-#' unlist(SFS_folded)
-#' [1] 6181 3751 2238 1773 1373 1034  789  765  674  537  444  399  393  350  298  298  285  265  246  211  212  214  179  192  181  171  167  138  149  152  109
+#' SFS_folded
+#' [1]     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21    22    23    24    25    26    27    28    29 
+#' #     25810 12912  8908  6501  5006  3969  3148  2772  2340  2079  1934  1724  1473  1450  1400  1325  1221  1339  1203  1115  1137  1225  1090  1054  1039  1038  1082   971   962 
+#  #    30    31 
+#  #    993   443 
 
 Get_FoldedSFS = function(loci_table_T){
   # set the classes
@@ -25,24 +28,18 @@ Get_FoldedSFS = function(loci_table_T){
   print("nb_class:")
   print(length(count_class))
   
-  list_class=list()  
-  for(i in c(seq_len(nb_samples))){
-    list_class[i]=0
-  }
-  # Loop over loci to compute frequencies
-  for(i in seq_len(nrow(loci_table_T))){
-    current_pos = loci_table_T[i,]
-    # remove loci if NA or non-variant loci
-    if(NA %in% current_pos || sum(current_pos, na.rm = T) == 0){next}
-    count_snp=as.numeric(sum(current_pos))
-    count_ref=as.numeric(nb_samples*2 - count_snp)
-    minor_count = min(count_ref,count_snp)
-    if (minor_count %in% count_class){
-      list_class[minor_count] = as.numeric(list_class[minor_count]) + 1
-    }else{print(i)}
-  }
-  return(list_class)
+  # remove loci if NA or non-variant loci
+  Purged_loci <- loci_table_T[rowSums(is.na(loci_table_T)) == 0 & rowSums(loci_table_T) != 0 & rowSums(loci_table_T) != nb_samples*2,, drop=FALSE]
+  
+  # to continue to vectorization
+  count_snp=as.numeric(rowSums(Purged_loci))
+  count_ref=as.numeric(nb_samples*2 - count_snp)
+  minor_count = pmin(count_ref,count_snp)
+  SFS = table(minor_count)
+  
+  return(SFS)
 }
+
 
 # Make 2D SFS ##########################################
 #' Get2DSFS: Compute pairwise Hudson Fst on whole loci
@@ -147,3 +144,4 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
     SFS_2D <- table(freq_pop[[1]], freq_pop[[2]])
     return(SFS_2D)
   }
+
