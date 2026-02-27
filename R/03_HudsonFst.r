@@ -201,6 +201,9 @@ getFstBySNP_Freq<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold 
 #' @return vec_pi_pop : vector of Pi within and Pi between in  2 lists format
 #' @examples : TODO
 getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold = 0.05){
+  
+  mt = pop_table[match(colnames(loci_table_T), pop_table[,2]),]
+  
   Fst_Pairs=list()
   # get the rigth pop in pop table
   samples_2pops = colnames(loci_table_T)
@@ -213,7 +216,7 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 	print(pair_ni)
 	
     # get samples from the two pop : # rather do a more general function : get sample from pop ID and run it twice
-    Sample_pop = getSamplePairPop(Pair_i = as.vector(unlist(pop_tbl[c(pair_ni), c(1,2)])), pop_table)
+    Sample_pop = getSamplePairPop(Pair_i = as.vector(unlist(pop_tbl[c(pair_ni), c(1,2)])), mt)
 	  # get  table of genotype of the two pop
     sample_vec = c(Sample_pop[[1]], Sample_pop[[2]])
     loci_pair <- loci_table_T[, sample_vec, drop = FALSE]
@@ -242,7 +245,7 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 	  loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
 	
     # compute Pis : 
-    Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, pop_table)
+    Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, mt)
 	  # All NA in PiWithin or Between gonna return NA FST
     Fst_SNP = (Pi_W_B$Pi_between - Pi_W_B$Pi_within) / Pi_W_B$Pi_between
 
@@ -292,6 +295,7 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 #'[1] 0.3770475
 getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold = 0.05) {
   
+  mt = pop_table[match(colnames(loci_table_T), pop_table[,2]),]
   # get the rigth pop in pop table
   samples_2pops = colnames(loci_table_T)
   pop_level = unique(pop_table[,1][pop_table[,2] %in% samples_2pops])
@@ -305,7 +309,7 @@ getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold =
     # populations in the pair
     pair_pops <- as.character(pop_tbl[pair_ni, ])
     # samples for the two populations
-    Sample_pop <- getSamplePairPop(Pair_i = pair_pops, pop_table = pop_table)
+    Sample_pop <- getSamplePairPop(Pair_i = pair_pops, pop_table = mt)
     
     sum_pi_within  <- 0
     sum_pi_between <- 0
@@ -370,7 +374,6 @@ getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold =
 #'3    pop1 1554W1_S341
 #'4    pop1 1555W1_S397
 #' 5    pop1 1556W1_S337
-
 #' Fst_GlobalCount = getGlobalFst_Count(loci_table_T = loci_table_T_CV, 
 #'                          pop_table = meta_sub, Na_rate = 0.2, MAF_threshold = 0)
 #'						  tibble(loci_table_T_CV)
@@ -387,6 +390,7 @@ getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold =
 
 getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold = 0.05) {
   
+  mt = pop_table[match(colnames(geno_table), pop_table[,2]),]
   # get the rigth pop in pop table
   samples_2pops = colnames(loci_table_T)
   pop_level = unique(pop_table[,1][pop_table[,2] %in% samples_2pops])
@@ -398,9 +402,9 @@ getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_thres
   for (pair_ni in seq_len(nrow(pop_tbl))) {
     # populations in the pair
     pair_pops <- as.character(pop_tbl[pair_ni, ])
-	print(pair_pops)
+	  print(pair_pops)
     # samples for the two populations
-    Sample_pop <- getSamplePairPop(Pair_i = pair_pops, pop_table = pop_table)
+    Sample_pop <- getSamplePairPop(Pair_i = pair_pops, pop_table = mt)
 
     sum_pi_within  <- 0
     sum_pi_between <- 0
@@ -427,7 +431,7 @@ getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_thres
 	  loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
 
 	  # compute Pis : 
-    Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, pop_table)
+    Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, mt)
   	# All NA in PiWithin or Between gonna return NA FST.
 	  Fst_SNP=sum((Pi_W_B$Pi_between - Pi_W_B$Pi_within), na.rm = T) / sum(Pi_W_B$Pi_between, na.rm=T)
 	  print("nb of loci : ")
