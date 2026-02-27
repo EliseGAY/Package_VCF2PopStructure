@@ -1,3 +1,4 @@
+#' Convert_GT 
 #' @param : genotype table, make sure that 'na' are encoded in R readable. In format :
 #' 
 #' loci_table = data.frame(I=c("0/1" , "0/1" , "1/1", "0/0" , "0/0" , NA, "0/1" , "0/1" , "1/1"),
@@ -181,7 +182,7 @@ getSamplePop<-function(pop_name, pop_table){
   return(pop1)
 }
 
-# getSamplePairPop : Extract pair of pop in a metadata table
+#' getSamplePairPop : Extract pair of pop in a metadata table
 #' @param Pair_i vector of 2 pop names (char)
 #' @param pop_table (dataframe) : contains samples ID in col1 and Pop names in col2
 #' @returns list of samples named by pop 
@@ -248,7 +249,6 @@ getPairwisePop<-function(pop_vec){
 #' 
 #' $ref_freq
 #' [1] 0.6
-
 getAlleleFreq = function(locus){
   ## TODO : Managment and verif of LociPairs table (Na and df)
   
@@ -275,7 +275,6 @@ getAlleleFreq = function(locus){
 #' 
 #' $ref_freq
 #' [1] 0.6
-
 getAlleleCount= function(locus){
   
   if(all(locus[!is.na(locus)] %in% c(0, 1, 2, NA))){
@@ -287,7 +286,7 @@ getAlleleCount= function(locus){
   return(count_list)
 }
 
-# getAlleleFreqByPop : Extract pair of pop in a metadata table
+#' getAlleleFreqByPop : Extract pair of pop in a metadata table
 #' @param loci_table dataframe of allele count in loci (rows) and in samples (col) from one or several pop
 #' @param pop_table (dataframe) : contains samples ID in col1 and Pop names in col2
 #' @returns list of allele frequencies for each pop
@@ -315,8 +314,6 @@ getAlleleCount= function(locus){
 #'         Length Class  Mode   
 #'alt_freq 181043 -none- numeric
 #'ref_freq 181043 -none- numeric
-
-
 getAlleleFreqByPop=function(loci_table, pop_table){
   # sanity check
   stopifnot(is.data.frame(loci_table))
@@ -356,7 +353,7 @@ getAlleleFreqByPop=function(loci_table, pop_table){
 
 
 
-# getAlleleCountByPop : Extract allele count from genotype table by pop use getAlleleCount function 
+#' getAlleleCountByPop : Extract allele count from genotype table by pop use getAlleleCount function 
 #' @param loci_table dataframe of allele count in loci (rows) and in samples (col) from one or several pop
 #' @param pop_table (dataframe) : contains samples ID in col1 and Pop names in col2
 #' @returns list of allele count for each pop
@@ -385,7 +382,6 @@ getAlleleFreqByPop=function(loci_table, pop_table){
 #' by_popCount = getAlleleCountByPop(loci_table = loci_table_T_CV, pop_table = metadata)
 #' by_popCount[[1]]$alt_count
 #' by_popCount$Pop1$ref_count
-
 getAlleleCountByPop=function(loci_table, pop_table){
    # sanity check
   stopifnot(is.data.frame(loci_table))
@@ -426,4 +422,81 @@ getAlleleCountByPop=function(loci_table, pop_table){
   
   return(res)
 
+}
+
+#' Get_SW_abs
+#' @param : VCF : vcfR format
+#' @param window window (int)
+#' @param slides slide (int)
+#' @import IRanges
+#' @import GenomicRanges
+#' @description
+#'  uses Granges and Iranges object to create sw windows table 
+#' @return a dataframe of sliding windows with colnames = c(chr,start,end, mid_point, nb_snp)
+#' @examples
+#' df = Get_SW_abs(VCFR_data, slide = 2000, windows = 10000)
+#' df
+#'  chr        start   end mid_point nb_snp
+#'<chr>      <int> <int>     <dbl>  <int>
+#'1 ptg000007l     1 10000     5000.     21
+#'2 ptg000007l  2001 12000     7000.     60
+#'3 ptg000007l  4001 14000     9000.     73
+#'4 ptg000007l  6001 16000    11000.     87
+#'5 ptg000007l  8001 18000    13000.    109
+#'6 ptg000007l 10001 20000    15000.     92
+#'7 ptg000007l 12001 22000    17000.     61
+#'8 ptg000007l 14001 24000    19000.     55
+#'9 ptg000007l 16001 26000    21000.     49
+#'10 ptg000007l 18001 28000    23000.     44
+#' 6,915 more rows
+Get_SW_abs=function(VCF, slide = 5000, window = 10000){
+  snp_vec = GRanges(seqnames = VCF@fix[,1], ranges = IRanges(start = getPOS(VCF), end = getPOS(VCF)))
+  chrom_name = VCF@fix[1,1]
+  sw = slidingWindows(GRanges(seqnames = chrom_name, ranges = IRanges(1, max(getPOS(VCF)))),width = window, step = slide)
+  sw_vec = unlist(sw)
+  hits = findOverlaps(sw_vec, snp_vec, ignore.strand = TRUE)
+  snp_by_windows = tabulate(queryHits(hits), nbins = length(sw_vec))
+  df_sw = data.frame(chr = as.character(seqnames(sw_vec)), start = start(sw_vec), end = end(sw_vec), mid_point = c((start(sw_vec) + end(sw_vec)) / 2), 
+                     nb_snp = snp_by_windows)
+  return(df_sw)
+}
+
+#' Get_SW_SNPrange
+#' @param : VCF : vcfR format
+#' @param nb_snp_wind window (int)
+#' @param nb_snp_slide slide (int)
+#' @import IRanges
+#' @import vcfR
+#' @import GenomicRanges
+#' @description
+#'  uses Granges and Iranges object to create sw windows table over SNPs
+#' @return a dataframe of sliding windows with colnames = c(chr,start,end, mid_point)
+#' @examples
+#' df = Get_SW_SNPrange(VCFR_data, nb_snp_wind = 2000, nb_snp_slide = 1000)
+#' df
+#' 403 × 4
+#'chr        start   end mid_point
+#'<chr>      <int> <int>     <dbl>
+#'  1 ptg000007l     1  1000      500.
+#'2 ptg000007l   501  1500     1000.
+#'3 ptg000007l  1001  2000     1500.
+#'4 ptg000007l  1501  2500     2000.
+#'5 ptg000007l  2001  3000     2500.
+#'6 ptg000007l  2501  3500     3000.
+#'7 ptg000007l  3001  4000     3500.
+#'8 ptg000007l  3501  4500     4000.
+#'9 ptg000007l  4001  5000     4500.
+#'10 ptg000007l  4501  5500     5000.
+# ℹ 393 more rows
+Get_SW_SNPrange=function(VCF, nb_snp_wind = 1000, nb_snp_slide= 500){
+  chrom_name = VCF@fix[1,1]
+  snp_sw = slidingWindows(GRanges(seqnames = chrom_name, 
+                                  ranges = IRanges(1, length(getPOS(VCF)))), 
+                          width = nb_snp_wind, step = nb_snp_slide)
+  snp_sw = unlist(snp_sw)
+  df_sw = data.frame(chr = chrom_name, 
+                     start = start(snp_sw), 
+                     end = end(snp_sw), 
+                     mid_point = c((start(snp_sw) + end(snp_sw)) / 2))
+  return(df_sw)
 }
