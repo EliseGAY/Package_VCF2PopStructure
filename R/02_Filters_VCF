@@ -1,4 +1,4 @@
-#' Filter Inds and Pos by DP Thresholds
+#' filter_vcf_by_dp : Filter Inds and Pos by DP Thresholds
 #'
 #' This function filters a VCF file based on the depth of coverage (DP) for both positions (pos) and individuals (ind). 
 #' It removes positions and individuals whose DP is outside the specified minimum and maximum thresholds.
@@ -44,7 +44,7 @@ filter_vcf_by_dp <- function(vcf, min_dp_pos, max_dp_pos, min_dp_ind, max_dp_ind
   return(filtered_vcf_ind_pos)
 }
 
-#' Filters VCF based on missing data rate for individuals and positions
+#' Filters_na_Ind_Pos : Filters VCF based on missing data rate for individuals and positions
 #'
 #' This function filters a VCF object by the missing data rate for both individuals (samples)
 #' and positions (variants). The user can specify the ploidy level (1 or 2), and the function
@@ -96,7 +96,7 @@ Filters_na_Ind_Pos <- function(vcf, rate_na_max_POS, rate_na_max_Ind, ploidy) {
   return(vcf_filtered_ind)
 }
 
-#' Filter Individuals and Positions by Alternative Rate
+#' Filters_Het_Ind_Pos : Filter Individuals and Positions by Alternative Rate
 #'
 #' This function filters a VCF file based on the alternative allele rate both by individuals and by positions. 
 #' The function calculates the percentage of heterozygous (alternative) genotypes for each individual and for each position,
@@ -154,4 +154,3 @@ Filters_Het_Ind_Pos <- function(vcf, ploidy, rate_het_max_POS, rate_het_max_Ind)
   # Return the filtered VCF
   return(vcf_filtered_het)
 }
-
