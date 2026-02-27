@@ -1,4 +1,4 @@
-#' Compute Pi on loci
+#' getPiWithinBetween_Freq : Compute Pi on loci
 #' @param loci : dataframe format with 0,1,2 encoded genotype, samples in column and ind in lines
 #' @param pop_table : data.frame with col1 : pop (char) and col2 : ind (car)
 #' @return vec_pi_pop : vector of Pi within and Pi between for the loci
@@ -26,7 +26,6 @@
 #' [1] 0.3333333 0.6666667 
 #' attr(,"levels") 
 #' [1] "Pi_within" "Pi_between"
-
 getPiWithinBetween_Freq<-function(loci_pairs, pop_table){
   # TODO : Check for each loci to have at least one SNPs # 
   # get pop names 
@@ -55,8 +54,11 @@ getPiWithinBetween_Freq<-function(loci_pairs, pop_table){
 
 
 
-
-################### TODO #####################################
+#' getPiWithinBetween_Count : Compute Pi based on alt count 
+#' @param loci_pairs : dataframe format with 0,1,2 encoded genotype, samples in column and ind in lines
+#' @param pop_table : data.frame with col1 : pop (char) and col2 : ind (car)
+#' @return vec_pi_pop : vector of Pi within and Pi between in  2 lists format
+#' @examples : TODO
 getPiWithinBetween_Count<-function(loci_pairs, pop_table){
 
   # Samples present in the locus table
@@ -110,10 +112,7 @@ getPiWithinBetween_Count<-function(loci_pairs, pop_table){
   return(vec_pi_pop)
 }
 
-################### TODO #####################################
-
-
-#' Compute Hudson Fst per SNP
+#' getFstBySNP_Freq : Compute Hudson Fst per SNP
 #'
 #' @param loci_table_T Transposed genotype table with 0,1,2 encoding
 #' @param pop_table Data.frame with pop_vec and sample names
@@ -193,8 +192,14 @@ getFstBySNP_Freq<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold 
 }
   return(Fst_Pairs)
 }
-################### TODO AND DEBUG FUNCTION #####################################
 
+#' getFstBySNP_Count : Compute Pi based on alt count 
+#' @param loci_table_T : dataframe format with 0,1,2 encoded genotype, samples in column and ind in lines
+#' @param pop_table : data.frame with col1 : pop (char) and col2 : ind (car)
+#' @param Na_rate : na rate
+#' @param MAF_threshold : MAF 
+#' @return vec_pi_pop : vector of Pi within and Pi between in  2 lists format
+#' @examples : TODO
 getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold = 0.05){
   Fst_Pairs=list()
   # get the rigth pop in pop table
@@ -209,12 +214,12 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 	
     # get samples from the two pop : # rather do a more general function : get sample from pop ID and run it twice
     Sample_pop = getSamplePairPop(Pair_i = as.vector(unlist(pop_tbl[c(pair_ni), c(1,2)])), pop_table)
-	# get  table of genotype of the two pop
+	  # get  table of genotype of the two pop
     sample_vec = c(Sample_pop[[1]], Sample_pop[[2]])
     loci_pair <- loci_table_T[, sample_vec, drop = FALSE]
-	print(colnames(loci_pair))
-	# intialize the Fst by snp vector to the corresponding pairs
-	pair_name = paste(pop_tbl[pair_ni, 1],
+  	print(colnames(loci_pair))
+  	# intialize the Fst by snp vector to the corresponding pairs
+	  pair_name = paste(pop_tbl[pair_ni, 1],
                       pop_tbl[pair_ni, 2],
                       sep = "_")
     Fst_Pairs[[pair_name]] <- numeric() # carefull if the size is the nrow , and fst are lower than nrow the value by default is 0
@@ -222,23 +227,23 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
     # Sanity check :
     #---------------------#
     # NA rate check
-	na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
-	na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
+	  na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
+	  na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
 
-	loci_pair_na = loci_pair[!(na_pop1 | na_pop2), ,drop = F]     
+	  loci_pair_na = loci_pair[!(na_pop1 | na_pop2), ,drop = F]     
     
-	# monomorphic in both populations
-	rs <- rowSums(loci_pair_na)
-	loci_pair_na_bi = loci_pair_na[!(rs == 0 | rs == 2 * ncol(loci_pair_na)), ,drop = F]
+	  # monomorphic in both populations
+	  rs <- rowSums(loci_pair_na)
+	  loci_pair_na_bi = loci_pair_na[!(rs == 0 | rs == 2 * ncol(loci_pair_na)), ,drop = F]
 
     # MAF 
     freqs <- getAlleleFreq(loci_pair_na_bi)
     maf <- pmin(freqs$alt_freq, freqs$ref_freq)
-	loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
+	  loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
 	
     # compute Pis : 
     Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, pop_table)
-	# All NA in PiWithin or Between gonna return NA FST
+	  # All NA in PiWithin or Between gonna return NA FST
     Fst_SNP = (Pi_W_B$Pi_between - Pi_W_B$Pi_within) / Pi_W_B$Pi_between
 
     # return wrong list, have to contains all the Fst_SNP
@@ -248,7 +253,7 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 }
 
 
-#' Compute pairwise Hudson Fst on whole loci
+#' getGlobalFst : Compute pairwise Hudson Fst on whole loci
 #'
 #' @param loci_table_T Transposed genotype table with 0,1,2 encoding
 #' @param pop_table Data.frame with pop_vec and sample names
@@ -285,7 +290,6 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 #'
 #'$A_C
 #'[1] 0.3770475
-
 getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold = 0.05) {
   
   # get the rigth pop in pop table
@@ -314,37 +318,37 @@ getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold =
     # Sanity check :
     #---------------------#
     # NA rate check
-	na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
-	na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
+	  na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
+	  na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
 
-	loci_pair_na = loci_pair[!(na_pop1 | na_pop2), ,drop = F]     
+	  loci_pair_na = loci_pair[!(na_pop1 | na_pop2), ,drop = F]     
     
-	# monomorphic in both populations
-	rs <- rowSums(loci_pair_na)
-	loci_pair_na_bi = loci_pair_na[!(rs == 0 | rs == 2 * ncol(loci_pair_na)), ,drop = F]
+	  # monomorphic in both populations
+	  rs <- rowSums(loci_pair_na)
+	  loci_pair_na_bi = loci_pair_na[!(rs == 0 | rs == 2 * ncol(loci_pair_na)), ,drop = F]
 
     # MAF 
     freqs <- getAlleleFreq(loci_pair_na_bi)
     maf <- pmin(freqs$alt_freq, freqs$ref_freq)
-	loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
+	  loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
 	
 	
     print("nb of loci : ")
     print(dim(loci_pair_na_bi_maf)[1])
     # Hudson global Fst
 	
-	# compute Pis : 
+	  # compute Pis : 
     Pi_W_B = getPiWithinBetween_Freq(loci_pair_na_bi_maf, pop_table) ### warning here
     
-	Fst_SNP=sum(Pi_W_B$Pi_between - Pi_W_B$Pi_within, na.rm=T) / sum(Pi_W_B$Pi_between, na.rm=T)
-	print(Fst_SNP)
+	  Fst_SNP=sum(Pi_W_B$Pi_between - Pi_W_B$Pi_within, na.rm=T) / sum(Pi_W_B$Pi_between, na.rm=T)
+	  print(Fst_SNP)
     pair_name=paste(pair_pops[1], pair_pops[2], sep = "_")
     FstGlobal_Pairs[[pair_name]]=Fst_SNP
   }
   return(FstGlobal_Pairs)
 }
 
-#' Compute pairwise Hudson Fst on ALT count 
+#' getGlobalFst_Count : Compute pairwise Hudson Fst on ALT count 
 #'
 #' @param loci_table_T Transposed genotype table with 0,1,2 encoding
 #' @param pop_table Data.frame with pop_vec and sample names
@@ -408,27 +412,27 @@ getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_thres
     # Sanity check :
     #---------------------#
     # NA rate check
-	na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
-	na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
+	  na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
+	  na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
 
-	loci_pair_na = loci_pair[!(na_pop1 | na_pop2), ,drop = F]     
+	  loci_pair_na = loci_pair[!(na_pop1 | na_pop2), ,drop = F]     
     
-	# monomorphic in both populations
-	rs <- rowSums(loci_pair_na)
-	loci_pair_na_bi = loci_pair_na[!(rs == 0 | rs == 2 * ncol(loci_pair_na)), ,drop = F]
+	  # monomorphic in both populations
+	  rs <- rowSums(loci_pair_na)
+	  loci_pair_na_bi = loci_pair_na[!(rs == 0 | rs == 2 * ncol(loci_pair_na)), ,drop = F]
 
     # MAF 
     freqs <- getAlleleFreq(loci_pair_na_bi)
     maf <- pmin(freqs$alt_freq, freqs$ref_freq)
-	loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
+	  loci_pair_na_bi_maf = loci_pair_na_bi[maf > MAF_threshold, ,drop = F]
 
-	# compute Pis : 
+	  # compute Pis : 
     Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, pop_table)
   	# All NA in PiWithin or Between gonna return NA FST.
-	Fst_SNP=sum((Pi_W_B$Pi_between - Pi_W_B$Pi_within), na.rm = T) / sum(Pi_W_B$Pi_between, na.rm=T)
-	print("nb of loci : ")
+	  Fst_SNP=sum((Pi_W_B$Pi_between - Pi_W_B$Pi_within), na.rm = T) / sum(Pi_W_B$Pi_between, na.rm=T)
+	  print("nb of loci : ")
     print(dim(loci_pair_na_bi_maf)[1])
-	print(Fst_SNP)
+	  print(Fst_SNP)
     pair_name=paste(pair_pops[1], pair_pops[2], sep = "_")
     FstGlobal_Pairs[[pair_name]]=Fst_SNP
   }
