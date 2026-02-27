@@ -1,5 +1,5 @@
 # Make SFS ##########################################
-#' Get2DSFS: Compute pairwise Hudson Fst on whole loci
+#' Get_FoldedSFS 
 #' @import comprehenr
 #' @param loci_table_T Transposed genotype table with 0,1,2 encoding
 #' @return vector of counts of minor allele frequencies
@@ -20,7 +20,6 @@
 #' #     25810 12912  8908  6501  5006  3969  3148  2772  2340  2079  1934  1724  1473  1450  1400  1325  1221  1339  1203  1115  1137  1225  1090  1054  1039  1038  1082   971   962 
 #  #    30    31 
 #  #    993   443 
-
 Get_FoldedSFS = function(loci_table_T){
   # set the classes
   nb_samples=dim(loci_table_T)[2]
@@ -95,7 +94,6 @@ Get_FoldedSFS = function(loci_table_T){
 #'  9    1623    157    153    110    136    106    102     93     93    130     51
 #'  10   1525    129    135     96    130    118    115    103     96     94     73
 #'  11    771     66     68     72     67     55     59     46     45     46     40
-
 Get2DSFS = function(pop_table, pop_pair, loci_table_T){
   
   # samples for the two populations
@@ -144,4 +142,3 @@ Get2DSFS = function(pop_table, pop_pair, loci_table_T){
     SFS_2D <- table(freq_pop[[1]], freq_pop[[2]])
     return(SFS_2D)
   }
-
