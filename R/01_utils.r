@@ -205,6 +205,10 @@ getSamplePop<-function(pop_name, pop_table){
 #' $B
 #' [1] "s4" "s5" "s6"
 getSamplePairPop<-function(Pair_i, pop_table){
+  if (length(Pair_i) > 2) {
+    stop("ERROR: loci table contains more than two pops:\n",
+         paste(Pair_i, collapse = ", "))
+  }
   pop1 = pop_table[which(pop_table[,1]== Pair_i[1]),][,2]
   pop2 = pop_table[which(pop_table[,1]== Pair_i[2]),][,2]
   list_pair = list(pop1, pop2)
@@ -212,13 +216,16 @@ getSamplePairPop<-function(Pair_i, pop_table){
   return(list_pair)
 }
 
-#' getSamplePop : Extract one of pop in a metadata table
+#' getPairwisePop : Extract one of pop in a metadata table
 #' @param pop_vec (char  vec)
 #' @returns df of pairwise pop couple (by row)
 #' @examples 
 #' pairs_pop_sample = getPairwisePop(unique(pop_table_test[,1]))
 getPairwisePop<-function(pop_vec){
   pops = unique(pop_vec)
+  if (length(pops) <= 1) {
+    stop("Need at least two populations to compute pairwise comparisons.")
+  }
   pairs = list()
   k = 1
   for (i in seq_len(length(pops) - 1)) {
@@ -395,10 +402,8 @@ getAlleleCountByPop=function(loci_table, pop_table){
   # check all samples exist in pop_table
   missing_in_pop_table <- setdiff(samples_2pops, pop_table[,2])
   if (length(missing_in_pop_table) > 0) {
-    stop(
-      "ERROR: loci_table contains samples not present in pop_table:\n",
-      paste(missing_in_pop_table, collapse = ", ")
-    )
+    stop("ERROR: loci_table contains samples not present in pop_table:\n",
+      paste(missing_in_pop_table, collapse = ", "))
   }
   
   # get populations present in this subset, sorted for stable order
@@ -410,9 +415,6 @@ getAlleleCountByPop=function(loci_table, pop_table){
   for (pop_i in pop_level) {
     # extract sample IDs for this population
     samples_pop_i <- pop_table[pop_table[,1] == pop_i & pop_table[,2] %in% samples_2pops, 2]
-    print("get count:")
-	print(pop_i)
-	print(samples_pop_i)
     # subset loci_table for these samples
     loci_pop_i <- loci_table[, samples_pop_i, drop = FALSE]
     
