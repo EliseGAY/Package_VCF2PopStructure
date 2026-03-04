@@ -259,10 +259,9 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
 	                   pop_tbl[pair_ni, 2],
 	                   "position",
 	                    sep = "_")
-    Fst_Pairs[[pair_name]] <- numeric() # carefull if the size is the nrow , and fst are lower than nrow the value by default is 0
+    Fst_Pairs[[pair_name]] <- numeric()
     Fst_Pairs[[pos_name]] <- numeric() 
-    # Sanity check :
-    #---------------------#
+    
     # NA rate check
 	  na_pop1 = rowMeans(is.na(loci_pair[, Sample_pop[[1]]])) > Na_rate
 	  na_pop2 = rowMeans(is.na(loci_pair[, Sample_pop[[2]]])) > Na_rate
@@ -284,8 +283,8 @@ getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold
     Fst_SNP = (Pi_W_B$Pi_between - Pi_W_B$Pi_within) / Pi_W_B$Pi_between
     
     # get pos list :
-    pos_list = strsplit(row.names(geno_table), split = "_")
-    pos_list_num <- sapply(my_list, function(x) as.numeric(x[2]))
+    pos_list = strsplit(row.names(loci_pair_na_bi_maf), split = "_")
+    pos_list_num <- sapply(pos_list, function(x) as.numeric(x[2]))
     
     # return wrong list, have to contains all the Fst_SNP
     Fst_Pairs[[pair_name]] = Fst_SNP
