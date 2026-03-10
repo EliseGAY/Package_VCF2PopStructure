@@ -428,7 +428,7 @@ getGlobalFst <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold =
 
 getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_threshold = 0.05) {
   
-  mt = pop_table[match(colnames(geno_table), pop_table[,2]),,drop =FALSE]
+  mt = pop_table[match(colnames(loci_table_T), pop_table[,2]),,drop =FALSE]
   # get the rigth pop in pop table
   samples_2pops = colnames(loci_table_T)
   pop_level = unique(mt[,1][mt[,2] %in% samples_2pops])
