@@ -502,3 +502,17 @@ Get_SW_SNPrange=function(VCF, nb_snp_wind = 1000, nb_snp_slide= 500){
                      mid_point = c((start(snp_sw) + end(snp_sw)) / 2))
   return(df_sw)
 }
+
+#' bin_snps
+#' @param VCF in vcfR format
+#' @param bin_size (int)
+#' @import vcfR
+#' @description Extract one random snp in each windows of 'bin' size
+bin_snps<-function(vcf,bin_size = 100){
+  vec_pos = getPOS(vcf)
+  pos_bined = seq(1, length(vec_pos), bin_size)
+  random_index <- pos_bined + sample(1:(bin_size-1), length(pos_bined), replace = TRUE)
+  random_index[random_index > length(vec_pos)] <- length(vec_pos)
+  vcf_subset = vcf[random_index,]
+  return(vcf_subset)
+}
