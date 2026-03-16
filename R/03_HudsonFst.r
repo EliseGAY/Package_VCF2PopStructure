@@ -83,25 +83,26 @@ getPiWithinBetween_Count<-function(loci_pairs, pop_table){
   names(pop_list) <- pop_level
   
   # compute alt and ref freq in the two pops 
-  table_counts=getAlleleCountByPop(loci_pairs, pop_table)
+  table_counts=getAlleleCountByPop(loci_pairs, pop_sub)
   Pi_within=list()
   nb_chr_pop=list()
-  
+  nb_pairs_pop = list()
   for(i in c(1,2)){
 	  # set parameters for Pi :
 	  nb_chr = 2*length(pop_list[[i]])
 	  n_pairs = (nb_chr * (nb_chr - 1)) / 2
 	  n_pairs_ref = ((nb_chr - table_counts[[i]]$alt_count) * (nb_chr - table_counts[[i]]$alt_count - 1)) / 2
-	  n_paris_alt = (table_counts[[i]]$alt_count * (table_counts[[i]]$alt_count - 1)) / 2
-	  npairs_diff = n_pairs - (n_pairs_ref + n_paris_alt)
+	  n_pairs_alt = (table_counts[[i]]$alt_count * (table_counts[[i]]$alt_count - 1)) / 2
+	  npairs_diff = n_pairs - (n_pairs_ref + n_pairs_alt)
 	  
 	  # mean pairwise difference whithin pop
 	  Pi_within[[i]] = npairs_diff / n_pairs
 	  nb_chr_pop[[i]] = nb_chr
+	  nb_pairs_pop[[i]] = n_pairs
 	  }
 	  
   # carefull about the nb of Pi within in each pop.
-  Pi_within_mean =(nb_chr_pop[[1]] * Pi_within[[1]] + nb_chr_pop[[2]] * Pi_within[[2]]) / (nb_chr_pop[[1]] + nb_chr_pop[[2]])
+  Pi_within_mean = (Pi_within[[1]] + Pi_within[[2]]) / 2
   # compute Pi between :
   # ALT–ALT + REF–REF
   cross_pairs = nb_chr_pop[[1]] * nb_chr_pop[[2]] 
