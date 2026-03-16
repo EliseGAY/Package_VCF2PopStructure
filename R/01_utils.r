@@ -260,8 +260,8 @@ getAlleleFreq = function(locus){
   ## TODO : Managment and verif of LociPairs table (Na and df)
   
   if(all(locus[!is.na(locus)] %in% c(0, 1, 2, NA))){
-    
-    tot_alt_freq = as.numeric(rowSums(locus, na.rm = T)) / as.numeric(2*ncol(locus))
+    n_chroms <- 2*rowSums(!is.na(locus))
+    tot_alt_freq = as.numeric(rowSums(locus, na.rm = T)) / as.numeric(n_chroms)
     tot_ref_freq = 1-tot_alt_freq
     freq_list = list(tot_alt_freq, tot_ref_freq)
     names(freq_list) = c("alt_freq", "ref_freq")
@@ -271,6 +271,9 @@ getAlleleFreq = function(locus){
 
 
 #' getAltCount : get the Alt and Ref allele count in genotype table (0,1,2 encoded)
+#' 
+#' @description
+#' The Na are removed from total count.
 #' 
 #' @param : locus table, make sure that 'NA' are encoded in R readable. 
 #' 
@@ -288,7 +291,8 @@ getAlleleCount= function(locus){
     count_list=list()
     tot_alt_count = as.numeric(rowSums(locus, na.rm = T)) 
     count_list[["alt_count"]] = tot_alt_count
-	count_list[["ref_count"]] = (2*ncol(locus)) - count_list$alt_count
+    n_chroms <- 2*rowSums(!is.na(locus))
+	  count_list[["ref_count"]] = n_chroms - count_list$alt_count
   }else{stop("Invalid genotype detected")}
   return(count_list)
 }
