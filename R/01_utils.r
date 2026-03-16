@@ -250,6 +250,9 @@ getPairwisePop<-function(pop_vec){
 #' 
 #' @return List of alt and ref allele frequencies in the pop. Na are removed from the sample number
 #' 
+#' @description
+#' The na are removed from the freq calculation, so the number of total allele differs between SNPs
+#' 
 #' @examples getAlleleFreq(locus)
 #' $alt_freq
 #' [1] 0.4
@@ -273,7 +276,7 @@ getAlleleFreq = function(locus){
 #' getAltCount : get the Alt and Ref allele count in genotype table (0,1,2 encoded)
 #' 
 #' @description
-#' The Na are removed from total count.
+#' The na are removed from the count calculation, so the number of total allele differs between SNPs
 #' 
 #' @param : locus table, make sure that 'NA' are encoded in R readable. 
 #' 
