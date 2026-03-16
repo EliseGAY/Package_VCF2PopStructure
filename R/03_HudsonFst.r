@@ -89,7 +89,7 @@ getPiWithinBetween_Count<-function(loci_pairs, pop_table){
   nb_pairs_pop = list()
   for(i in c(1,2)){
 	  # set parameters for Pi :
-	  nb_chr = 2*length(pop_list[[i]])
+    nb_chr = table_counts[[i]]$alt_count + table_counts[[i]]$ref_count
 	  n_pairs = (nb_chr * (nb_chr - 1)) / 2
 	  n_pairs_ref = ((nb_chr - table_counts[[i]]$alt_count) * (nb_chr - table_counts[[i]]$alt_count - 1)) / 2
 	  n_pairs_alt = (table_counts[[i]]$alt_count * (table_counts[[i]]$alt_count - 1)) / 2
@@ -233,7 +233,7 @@ getFstBySNP_Freq<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold 
 #' Termes_Cucugnan_position   201634 -none- numeric
 #' Cesseras_Cucugnan           24931 -none- numeric
 #' Cesseras_Cucugnan_position 201634 -none- numeric
-getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.2, MAF_threshold = 0.05){
+getFstBySNP_Count<-function(loci_table_T, pop_table,Na_rate = 0.20, MAF_threshold = 0.05){
   
   mt = pop_table[match(colnames(loci_table_T), pop_table[,2]),, drop = FALSE]
   
@@ -473,7 +473,11 @@ getGlobalFst_Count <- function(loci_table_T, pop_table, Na_rate = 0.2, MAF_thres
 	  # compute Pis : 
     Pi_W_B = getPiWithinBetween_Count(loci_pair_na_bi_maf, mt)
   	# All NA in PiWithin or Between gonna return NA FST.
-	  Fst_SNP=sum((Pi_W_B$Pi_between - Pi_W_B$Pi_within), na.rm = T) / sum(Pi_W_B$Pi_between, na.rm=T)
+    if (sum(is.na(Pi_W_B$Pi_between)) > 0 || sum(is.na(Pi_W_B$Pi_within)) > 0) {
+      stop("ERROR: NA detected in Pi_between or Pi_within before FST computation.")
+    }
+    
+	  Fst_SNP=sum((Pi_W_B$Pi_between - Pi_W_B$Pi_within)) / sum(Pi_W_B$Pi_between)
 	  print("nb of loci : ")
     print(dim(loci_pair_na_bi_maf)[1])
 	  
