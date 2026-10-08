@@ -13,7 +13,7 @@ getAlleleCount(locus)
 List of alt allele count in the pop.
 }
 \description{
-getAltCount : get the Alt and Ref allele count in genotype table (0,1,2 encoded)
+The na are removed from the count calculation, so the number of total allele differs between SNPs
 }
 \examples{
 getAlleleFreq(locus)

@@ -19,7 +19,7 @@ I  1  1  2  0  0 NA  1  1  2}
 List of alt and ref allele frequencies in the pop. Na are removed from the sample number
 }
 \description{
-getAlleleFreq : get the Alt and Ref allele frequencies in genotype table (0,1,2 encoded)
+The na are removed from the freq calculation, so the number of total allele differs between SNPs
 }
 \examples{
 getAlleleFreq(locus)
